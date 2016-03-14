@@ -152,9 +152,6 @@ static int crb_send(struct tpm_chip *chip, u8 *buf, size_t len)
 
 	memcpy_toio(priv->cmd, buf, len);
 
-	/* Make sure that cmd is populated before issuing start. */
-	wmb();
-
 	if (priv->flags & CRB_FL_CRB_START)
 		iowrite32(cpu_to_le32(CRB_START_INVOKE), &priv->cca->start);
 
@@ -169,9 +166,6 @@ static void crb_cancel(struct tpm_chip *chip)
 	struct crb_priv *priv = chip->vendor.priv;
 
 	iowrite32(cpu_to_le32(CRB_CANCEL_INVOKE), &priv->cca->cancel);
-
-	/* Make sure that cmd is populated before issuing cancel. */
-	wmb();
 
 	if ((priv->flags & CRB_FL_ACPI_START) && crb_do_acpi_start(chip))
 		dev_err(&chip->dev, "ACPI Start failed\n");
