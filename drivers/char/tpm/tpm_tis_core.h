@@ -33,10 +33,13 @@ struct tpm_tis_phy_ops {
 	int (*read16)(struct tpm_chip *chip, u32 addr, u16 *result);
 	int (*read32)(struct tpm_chip *chip, u32 addr, u32 *result);
 	int (*write32)(struct tpm_chip *chip, u32 addr, u32 src);
+	int (*post_probe)(struct tpm_chip *chip);
 };
 
 struct tpm_tis_data {
 	u16 manufacturer_id;
+	u8 data_expect_mask;
+	u8 data_expect_val;
 	int locality;
 	int irq;
 	bool irq_tested;

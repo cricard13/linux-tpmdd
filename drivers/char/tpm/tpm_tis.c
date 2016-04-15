@@ -380,7 +380,8 @@ static int tpm_tis_send_data(struct tpm_chip *chip, u8 *buf, size_t len)
 		wait_for_tpm_stat(chip, TPM_STS_VALID, chip->timeout_c,
 				  &priv->int_queue, false);
 		status = tpm_tis_status(chip);
-		if (!itpm && (status & TPM_STS_DATA_EXPECT) == 0) {
+		if ((status & priv->data_expect_mask) !=
+			      priv->data_expect_val) {
 			rc = -EIO;
 			goto out_err;
 		}
@@ -394,7 +395,7 @@ static int tpm_tis_send_data(struct tpm_chip *chip, u8 *buf, size_t len)
 	wait_for_tpm_stat(chip, TPM_STS_VALID, chip->timeout_c,
 			  &priv->int_queue, false);
 	status = tpm_tis_status(chip);
-	if ((status & TPM_STS_DATA_EXPECT) != 0) {
+	if ((status & priv->data_expect_mask) == priv->data_expect_val) {
 		rc = -EIO;
 		goto out_err;
 	}
@@ -531,6 +532,8 @@ static bool tpm_tis_update_timeouts(struct tpm_chip *chip,
 static int probe_itpm(struct tpm_chip *chip)
 {
 	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
+	u8 data_expect_mask = priv->data_expect_mask;
+	u8 data_expect_val = priv->data_expect_val;
 	int rc = 0;
 	u8 cmd_getticks[] = {
 		0x00, 0xc1, 0x00, 0x00, 0x00, 0x0a,
@@ -558,13 +561,18 @@ static int probe_itpm(struct tpm_chip *chip)
 	release_locality(chip, priv->locality, 0);
 
 	itpm = true;
+	priv->data_expect_mask = 0;
+	priv->data_expect_val = 0;
 
 	rc = tpm_tis_send_data(chip, cmd_getticks, len);
 	if (rc == 0) {
 		dev_info(&chip->dev, "Detected an iTPM.\n");
 		rc = 1;
-	} else
+	} else {
+		priv->data_expect_mask = data_expect_mask;
+		priv->data_expect_val = data_expect_val;
 		rc = -EFAULT;
+	}
 
 out:
 	itpm = rem_itpm;
@@ -836,6 +844,8 @@ static int tpm_tis_init(struct device *dev, struct tpm_info *tpm_info,
 	chip->timeout_b = TIS_TIMEOUT_B_MAX;
 	chip->timeout_c = TIS_TIMEOUT_C_MAX;
 	chip->timeout_d = TIS_TIMEOUT_D_MAX;
+	phy->priv.data_expect_val = TPM_STS_DATA_EXPECT;
+	phy->priv.data_expect_mask = TPM_STS_DATA_EXPECT;
 
 	dev_set_drvdata(&chip->dev, &phy->priv);
 
