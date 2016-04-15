@@ -153,6 +153,10 @@ static inline int tpm_write32(struct tpm_chip *chip, u32 addr, u32 value)
 	return priv->phy_ops->write32(chip, addr, value);
 }
 
+int tpm_tis_common_read16(struct tpm_chip *chip, u32 addr, u16 *result);
+int tpm_tis_common_read32(struct tpm_chip *chip, u32 addr, u32 *result);
+int tpm_tis_common_write32(struct tpm_chip *chip, u32 addr, u32 value);
+
 void tpm_tis_ready(struct tpm_chip *chip);
 void release_locality(struct tpm_chip *chip, int l, int force);
 int tpm_tis_send_data(struct tpm_chip *chip, u8 *buf, size_t len);
