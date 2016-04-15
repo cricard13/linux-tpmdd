@@ -25,7 +25,7 @@
 
 #include "tpm.h"
 
-struct priv_data {
+struct tpm_tis_data {
 	u16 manufacturer_id;
 	int locality;
 	int irq;
