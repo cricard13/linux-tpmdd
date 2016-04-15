@@ -26,13 +26,13 @@
 #include "tpm.h"
 
 struct tpm_tis_phy_ops {
-	void (*read_bytes)(struct tpm_chip *chip, u32 addr, u16 len,
-			   u8 *result);
-	void (*write_bytes)(struct tpm_chip *chip, u32 addr, u16 len,
-			    u8 *value);
-	u16 (*read16)(struct tpm_chip *chip, u32 addr);
-	u32 (*read32)(struct tpm_chip *chip, u32 addr);
-	void (*write32)(struct tpm_chip *chip, u32 addr, u32 src);
+	int (*read_bytes)(struct tpm_chip *chip, u32 addr, u16 len,
+			  u8 *result);
+	int (*write_bytes)(struct tpm_chip *chip, u32 addr, u16 len,
+			   u8 *value);
+	int (*read16)(struct tpm_chip *chip, u32 addr, u16 *result);
+	int (*read32)(struct tpm_chip *chip, u32 addr, u32 *result);
+	int (*write32)(struct tpm_chip *chip, u32 addr, u32 src);
 };
 
 struct tpm_tis_data {
@@ -45,57 +45,55 @@ struct tpm_tis_data {
 	const struct tpm_tis_phy_ops *phy_ops;
 };
 
-static inline void tpm_read_bytes(struct tpm_chip *chip, u32 addr, u16 len,
+static inline int tpm_read_bytes(struct tpm_chip *chip, u32 addr, u16 len,
 				  u8 *result)
 {
 	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
 
-	priv->phy_ops->read_bytes(chip, addr, len, result);
+	return priv->phy_ops->read_bytes(chip, addr, len, result);
 }
 
-static inline u8 tpm_read8(struct tpm_chip *chip, u32 addr)
-{
-	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
-	u8 result;
-
-	priv->phy_ops->read_bytes(chip, addr, 1, &result);
-	return result;
-}
-
-static inline u16 tpm_read16(struct tpm_chip *chip, u32 addr)
+static inline int tpm_read8(struct tpm_chip *chip, u32 addr, u8 *result)
 {
 	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
 
-	return priv->phy_ops->read16(chip, addr);
+	return priv->phy_ops->read_bytes(chip, addr, 1, result);
 }
 
-static inline u32 tpm_read32(struct tpm_chip *chip, u32 addr)
+static inline int tpm_read16(struct tpm_chip *chip, u32 addr, u16 *result)
 {
 	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
 
-	return priv->phy_ops->read32(chip, addr);
+	return priv->phy_ops->read16(chip, addr, result);
 }
 
-static inline void tpm_write_bytes(struct tpm_chip *chip, u32 addr, u16 len,
+static inline int tpm_read32(struct tpm_chip *chip, u32 addr, u32 *result)
+{
+	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
+
+	return priv->phy_ops->read32(chip, addr, result);
+}
+
+static inline int tpm_write_bytes(struct tpm_chip *chip, u32 addr, u16 len,
 				   u8 *value)
 {
 	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
 
-	priv->phy_ops->write_bytes(chip, addr, len, value);
+	return priv->phy_ops->write_bytes(chip, addr, len, value);
 }
 
-static inline void tpm_write8(struct tpm_chip *chip, u32 addr, u8 value)
+static inline int tpm_write8(struct tpm_chip *chip, u32 addr, u8 value)
 {
 	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
 
-	priv->phy_ops->write_bytes(chip, addr, 1, &value);
+	return priv->phy_ops->write_bytes(chip, addr, 1, &value);
 }
 
-static inline void tpm_write32(struct tpm_chip *chip, u32 addr, u32 value)
+static inline int tpm_write32(struct tpm_chip *chip, u32 addr, u32 value)
 {
 	struct tpm_tis_data *priv = dev_get_drvdata(&chip->dev);
 
-	priv->phy_ops->write32(chip, addr, value);
+	return priv->phy_ops->write32(chip, addr, value);
 }
 
 #endif
