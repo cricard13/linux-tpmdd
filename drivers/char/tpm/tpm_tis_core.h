@@ -141,6 +141,10 @@ static inline int tpm_write32(struct tpm_tis_data *data, u32 addr, u32 value)
 	return data->phy_ops->write32(data, addr, value);
 }
 
+int tpm_tis_common_read16(struct tpm_tis_data *data, u32 addr, u16 *result);
+int tpm_tis_common_read32(struct tpm_tis_data *data, u32 addr, u32 *result);
+int tpm_tis_common_write32(struct tpm_tis_data *data, u32 addr, u32 value);
+
 void tpm_tis_remove(struct tpm_chip *chip);
 int tpm_tis_core_init(struct device *dev, struct tpm_tis_data *priv, int irq,
 		      const struct tpm_tis_phy_ops *phy_ops,
