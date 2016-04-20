@@ -854,6 +854,36 @@ int tpm_tis_resume(struct device *dev)
 EXPORT_SYMBOL_GPL(tpm_tis_resume);
 #endif
 
+int tpm_tis_common_read16(struct tpm_tis_data *data, u32 addr, u16 *result)
+{
+	int rc;
+
+	rc = data->phy_ops->read_bytes(data, addr, sizeof(u16), (u8 *)result);
+	if (!rc)
+		*result = le16_to_cpu(*result);
+	return rc;
+}
+EXPORT_SYMBOL_GPL(tpm_tis_common_read16);
+
+int tpm_tis_common_read32(struct tpm_tis_data *data, u32 addr, u32 *result)
+{
+	int rc;
+
+	rc = data->phy_ops->read_bytes(data, addr, sizeof(u32), (u8 *)result);
+	if (!rc)
+		*result = le32_to_cpu(*result);
+	return rc;
+}
+EXPORT_SYMBOL_GPL(tpm_tis_common_read32);
+
+int tpm_tis_common_write32(struct tpm_tis_data *data, u32 addr, u32 value)
+{
+	value = cpu_to_le32(value);
+	return data->phy_ops->write_bytes(data, addr, sizeof(u32),
+					   (u8 *)&value);
+}
+EXPORT_SYMBOL_GPL(tpm_tis_common_write32);
+
 MODULE_AUTHOR("Leendert van Doorn (leendert@watson.ibm.com)");
 MODULE_DESCRIPTION("TPM Driver");
 MODULE_VERSION("2.0");
